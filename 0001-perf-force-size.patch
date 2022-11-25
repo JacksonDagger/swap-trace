@@ -1,0 +1,72 @@
+From fd821a3bbb9efdefe6f3ae7ab974a95f322aa5d6 Mon Sep 17 00:00:00 2001
+From: Jackson Dagger <jacksonddagger@gmail.com>
+Date: Fri, 25 Nov 2022 10:40:59 -0800
+Subject: [PATCH] add 'force-size' option to allow access by location inside
+ struct and other pointers
+
+---
+ tools/perf/builtin-probe.c     |  2 ++
+ tools/perf/util/probe-event.h  |  1 +
+ tools/perf/util/probe-finder.c | 14 ++++++++++++--
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/tools/perf/builtin-probe.c b/tools/perf/builtin-probe.c
+index f62298f5db3b..1a12d5ee31c9 100644
+--- a/tools/perf/builtin-probe.c
++++ b/tools/perf/builtin-probe.c
+@@ -563,6 +563,8 @@ __cmd_probe(int argc, const char **argv)
+ 	OPT__DRY_RUN(&probe_event_dry_run),
+ 	OPT_INTEGER('\0', "max-probes", &probe_conf.max_probes,
+ 		 "Set how many probe points can be found for a probe."),
++	OPT_UINTEGER('\0', "force-size", &probe_conf.force_type_size,
++		 "Force type size for array calculations."),
+ 	OPT_CALLBACK_DEFAULT('F', "funcs", NULL, "[FILTER]",
+ 			     "Show potential probe-able functions.",
+ 			     opt_set_filter_with_command, DEFAULT_FUNC_FILTER),
+diff --git a/tools/perf/util/probe-event.h b/tools/perf/util/probe-event.h
+index 8ad5b1579f1d..f085c129ecff 100644
+--- a/tools/perf/util/probe-event.h
++++ b/tools/perf/util/probe-event.h
+@@ -17,6 +17,7 @@ struct probe_conf {
+ 	bool	cache;
+ 	bool	bootconfig;
+ 	int	max_probes;
++	unsigned int force_type_size;
+ 	unsigned long	magic_num;
+ };
+ extern struct probe_conf probe_conf;
+diff --git a/tools/perf/util/probe-finder.c b/tools/perf/util/probe-finder.c
+index 50d861a80f57..a887665e8650 100644
+--- a/tools/perf/util/probe-finder.c
++++ b/tools/perf/util/probe-finder.c
+@@ -397,7 +397,12 @@ static int convert_variable_type(Dwarf_Die *vr_die,
+ 		prefix = die_is_signed_type(&type) ? 's' :
+ 			 probe_type_is_available(PROBE_TYPE_X) ? 'x' : 'u';
+ 
+-	ret = dwarf_bytesize(&type);
++	if (probe_conf.force_type_size) {
++		ret = probe_conf.force_type_size;
++	}
++	else {
++		ret = dwarf_bytesize(&type);
++	}
+ 	if (ret <= 0)
+ 		/* No size ... try to use default type */
+ 		return 0;
+@@ -464,7 +469,12 @@ static int convert_variable_fields(Dwarf_Die *vr_die, const char *varname,
+ 			else
+ 				*ref_ptr = ref;
+ 		}
+-		ref->offset += dwarf_bytesize(&type) * field->index;
++		if (probe_conf.force_type_size) {
++			ref->offset += dwarf_bytesize(&type) * field->index;
++		}
++		else {
++			ref->offset += probe_conf.force_type_size * field->index;
++		}
+ 		ref->user_access = user_access;
+ 		goto next;
+ 	} else if (tag == DW_TAG_pointer_type) {
+-- 
+2.34.1
+
