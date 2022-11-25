@@ -36,42 +36,6 @@ def find_trends(deltas, windows=(2,)):
         results.append(result)
     return results
 
-def read_perf_output(filename, event=None):
-    with open(filename) as file:
-        lines = file.readlines()
-        dflist = []
-        if (event == None):
-            for line in lines:
-                words = line.split()
-                i = 3
-                while ("." not in words[i]):
-                    i += 1
-                d = {
-                    "time" : float(words[i][:-1])
-                }
-
-                for word in words[i+3:]:
-                    parts = word.split("=")
-                    d[parts[0]] = int(parts[1], base=16)
-                dflist.append(d)
-        else:
-            for line in lines:
-                if event in line:
-                    words = line.split()
-                    i = 3
-                    while ("." not in words[i]):
-                        i += 1
-                    d = {
-                        "time" : float(words[i][:-1])
-                    }
-
-                    for word in words[6:]:
-                        parts = word.split("=")
-                        d[parts[0]] = int(parts[1], base=16)
-                    dflist.append(d)
-        
-        return pd.DataFrame(dflist)
-
 def phi_coefficient(n11, n00, n10, n01):
     denom_sq = (n11+n10)*(n11+n01)*(n00+n10)*(n00+n01)
     if denom_sq == 0:
@@ -80,7 +44,7 @@ def phi_coefficient(n11, n00, n10, n01):
 
 
 def parse_output(filename):
-    df = read_perf_output(filename)
+    df = pd.read_csv(filename)
     times = df["time"].to_numpy()
     arr = df[df.columns.difference(["time"])].to_numpy()
     deltas = np.diff(arr, axis=0)
@@ -108,7 +72,7 @@ def parse_output(filename):
 
     return ret
 
-files = Path("data").glob('*')
+files = Path("traces").glob('*')
 dflist = []
 
 for f in files:
@@ -117,5 +81,3 @@ for f in files:
 
 df = pd.DataFrame(dflist)
 df.to_csv("results.csv")
-
-# sudo ./perf probe --source ~/Documents/linux --add='do_swap_page:45 vpage=vmf[3] vaddr=vmf[4] entry'
