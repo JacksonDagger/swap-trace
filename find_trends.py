@@ -20,7 +20,7 @@ def find_trend_leap(deltas, window=None):
     candidate = deltas[maj_index]
 
     count = 0
-    for i in range(0, window):
+    for i in range(0, window-1):
         if (deltas[i] == candidate):
             count += 1
 
