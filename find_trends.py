@@ -44,7 +44,7 @@ def phi_coefficient(n11, n00, n10, n01):
 
 
 def parse_output(filename):
-    df = pd.read_csv(filename)
+    df = pd.read_csv(filename, index_col=0)
     times = df["time"].to_numpy()
     arr = df[df.columns.difference(["time"])].to_numpy()
     deltas = np.diff(arr, axis=0)
