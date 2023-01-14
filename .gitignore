@@ -1,3 +1,5 @@
 *.csv
-data/*
+data*/*
 traces/*
+*.data*
+*.log
