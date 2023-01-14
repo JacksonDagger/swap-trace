@@ -4,7 +4,7 @@ from pathlib import Path
 
 def find_trend_leap(deltas, window=None):
     if (window == None):
-        window = deltas.size
+        window = deltas.size + 1
     maj_index = window - 1
     count = 1
 
@@ -25,6 +25,12 @@ def find_trend_leap(deltas, window=None):
             count += 1
 
     return (count > (window/2)), candidate
+
+def find_stride(deltas, window):
+    stride = deltas[0]
+    if np.all(deltas[:window - 1] == stride):
+        return stride
+    return 0
 
 def find_trends(deltas, windows=(2,)):
     results = []
