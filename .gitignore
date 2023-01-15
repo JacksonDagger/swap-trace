@@ -3,3 +3,4 @@ data*/*
 traces/*
 *.data*
 *.log
+workloads/SNAP/graphs/*

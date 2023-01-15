@@ -1,4 +1,5 @@
 #!/bin/bash
+# sudo mkdir /sys/fs/cgroup/memory/memcached
 # ETC 8.1g
 # SYS 14.0g
 
